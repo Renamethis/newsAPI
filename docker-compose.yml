@@ -1,0 +1,48 @@
+version: "3"
+services:
+  db:
+    container_name: db
+    build:
+      context: .
+      dockerfile: ./db.Dockerfile
+    environment:
+      POSTGRES_DB: "postgres"
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "secret"
+    volumes:
+      - database:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+      - "8000:8000"
+      - "6379:6379"
+  python:
+    container_name: python
+    restart: unless-stopped
+    stdin_open: true
+    network_mode: "service:db"
+    build: .
+    command: bash -c 'while !</dev/tcp/db/5432; do sleep 1; done; python3 manage.py migrate; python3 manage.py createsuperuser --noinput ; python3 manage.py runserver 0.0.0.0:8000'
+    environment:
+      DJANGO_SUPERUSER_PASSWORD: "secret"
+      DJANGO_SUPERUSER_USERNAME: "root"
+      DJANGO_SUPERUSER_EMAIL: "test@mail.ru"
+  celery-beat:
+    network_mode: "service:db"
+    build: .
+    container_name: 'celery-beat'
+    command: celery -A newsAPI beat -l info
+  celery-worker:
+    network_mode: "service:db"
+    build: .
+    container_name: 'celery-worker'
+    command: celery -A newsAPI worker -l info
+    volumes:
+      - database:/var/lib/postgresql/data
+  redis:
+    image: redis
+    network_mode: "service:db"
+    restart: always
+    container_name: 'redis'
+    command: redis-server
+volumes:
+  database:

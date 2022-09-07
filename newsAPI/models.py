@@ -4,6 +4,9 @@ from django.contrib.postgres.fields import ArrayField
 class News(models.Model):
     class Meta:
         db_table = 'news'
+        verbose_name = 'News'
+        verbose_name_plural = 'News'
+
     id = models.CharField(max_length=512, primary_key=True)
     uri = models.CharField(max_length=256)
     title = models.CharField(max_length=256)

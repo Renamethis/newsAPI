@@ -76,7 +76,22 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'newsAPI.wsgi.application'
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console_handler': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        '': {
+            'level': 'INFO',
+            'handlers': ['console_handler'],
+        },
+    },
 
+}
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 

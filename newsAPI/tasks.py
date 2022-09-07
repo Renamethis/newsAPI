@@ -9,8 +9,10 @@ import hashlib
 
 logger = get_task_logger(__name__)
 
+# Celery periodic task for update news in database
 @app.task
 def update_news():
+    # Read html using http client and feed it to parser
     client = httpx.Client(http2=True)
     parser = YandexOzonParser(client)
     ozonData = client.post(ozonLink + "/news").text
@@ -19,6 +21,7 @@ def update_news():
     parser.feed(str(yandexData))
     news = parser.get_news()
     amount = 0
+    # Calculate hash for each news and check for duplicates
     for n in news:
         n['id'] = hashlib.sha1(n['title'].encode('utf-8')).hexdigest()
         try:
@@ -27,6 +30,7 @@ def update_news():
                 continue
         except News.DoesNotExist:
             pass
+        # Write new model in database
         new = News(**n)
         new.save()
         amount += 1
